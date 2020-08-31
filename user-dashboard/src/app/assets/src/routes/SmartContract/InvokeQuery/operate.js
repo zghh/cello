@@ -81,29 +81,22 @@ export default class OperateDeploy extends Component {
                   label="Function Name"
                 >
                   {getFieldDecorator('functionName', {
-                  initialValue: functionName,
-                  rules: [
-                    {
-                      required: true,
-                      message: 'Must input function name',
-                    },
-                  ],
-                })(<Input placeholder="Function" />)}
+                    initialValue: functionName,
+                    rules: [
+                      {
+                        required: true,
+                        message: 'Must input function name',
+                      },
+                    ],
+                  })(<Input placeholder="Function" />)}
                 </FormItem>
                 <FormItem
                   {...formItemLayout}
                   label="Arguments"
-                  extra="Must use ',' separate arguments."
                 >
                   {getFieldDecorator('args', {
-                  initialValue: parameterStr,
-                  rules: [
-                    {
-                      required: true,
-                      message: 'Must input arguments',
-                    },
-                  ],
-                })(<Input placeholder="Arguments" />)}
+                    initialValue: parameterStr,
+                  })(<Input placeholder="Arguments" />)}
                 </FormItem>
                 <FormItem {...tailFormItemLayout}>
                   <Button loading={submitting} type="primary" htmlType="submit"><span className={styles["status-text"]}>{operation}</span></Button>
@@ -112,12 +105,12 @@ export default class OperateDeploy extends Component {
             </Card>
           </Col>
           {operation === 'query' && (
-          <Col span={12}>
-            <Card title="Query Result" bordered={false} loading={submitting}>
-              {result}
-            </Card>
-          </Col>
-)}
+            <Col span={12}>
+              <Card title="Query Result" bordered={false} loading={submitting}>
+                {result}
+              </Card>
+            </Col>
+          )}
         </Row>
       </Card>
     );

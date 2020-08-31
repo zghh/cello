@@ -1273,6 +1273,7 @@ module.exports = app => {
           one_good = true;
           app.logger.info('invoke chaincode proposal was good');
         } else {
+          error_message = proposalResponses[i].message.toString('utf8');
           app.logger.error('invoke chaincode proposal was bad');
         }
         all_good = all_good & one_good;
@@ -1369,7 +1370,7 @@ module.exports = app => {
           }
         }
       } else {
-        error_message = util.format('Failed to send Proposal and receive all good ProposalResponse');
+        error_message = util.format('Failed to send Proposal and receive all good ProposalResponse: %s', error_message);
         app.logger.debug(error_message);
       }
     } catch (error) {

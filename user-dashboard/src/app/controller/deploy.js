@@ -23,7 +23,7 @@ class DeployController extends Controller {
     const id = ctx.params.id;
     const { functionName, operation } = ctx.request.body;
     let { args } = ctx.request.body;
-    args = args.split(',');
+    args = args === "" ? [] : args.split(';');
     switch (operation) {
       case 'invoke':
         ctx.body = await ctx.service.deploy.invoke(functionName, args, id);

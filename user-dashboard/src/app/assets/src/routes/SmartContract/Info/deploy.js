@@ -117,7 +117,7 @@ export default class Deploy extends Component {
           if (!err) {
             let { functionName, args } = values;
             functionName = functionName === "" ? null : functionName;
-            args = args.split(',');
+            args = args === "" ? [] : args.split(';');
             this.setState({
               instantiating: true,
             }, () => {
@@ -187,7 +187,7 @@ export default class Deploy extends Component {
             {...formItemLayout}
             label="Code Version"
           >
-            <Select placeholder="Select a version to deploy" onChange={this.changeVersion} value={versionId} style={{width: 200}}>{versionOptions}</Select>
+            <Select placeholder="Select a version to deploy" onChange={this.changeVersion} value={versionId} style={{ width: 200 }}>{versionOptions}</Select>
           </FormItem>
         ),
         description: versionDesc,
@@ -200,7 +200,7 @@ export default class Deploy extends Component {
             {...formItemLayout}
             label="Chain"
           >
-            <Select placeholder="Select a chain to install" onChange={this.changeChain} value={chainId} style={{width: 200}}>{chainOptions}</Select>
+            <Select placeholder="Select a chain to install" onChange={this.changeChain} value={chainId} style={{ width: 200 }}>{chainOptions}</Select>
           </FormItem>
         ),
         description: chainDesc,
@@ -216,22 +216,15 @@ export default class Deploy extends Component {
             >
               {getFieldDecorator('functionName', {
                 initialValue: '',
-              })(<Input placeholder="Function" style={{width: '50%'}} />)}
+              })(<Input placeholder="Function" style={{ width: '50%' }} />)}
             </FormItem>
             <FormItem
               {...formItemLayout}
               label="Arguments"
-              extra="Must use ',' separate arguments."
             >
               {getFieldDecorator('args', {
                 initialValue: defaultInstantiateParameters,
-                rules: [
-                  {
-                    required: true,
-                    message: 'Must input arguments',
-                  },
-                ],
-              })(<Input placeholder="Arguments" style={{width: '50%'}} />)}
+              })(<Input placeholder="Arguments" style={{ width: '50%' }} />)}
             </FormItem>
           </div>
         ),
@@ -251,8 +244,8 @@ export default class Deploy extends Component {
           {dot}
         </Popover>
       ) : (
-        dot
-      );
+          dot
+        );
 
     function getNextText() {
       switch (current) {
@@ -301,10 +294,10 @@ export default class Deploy extends Component {
           {
             current > 0
             && (
-            <Button onClick={this.prev}>
-              Previous
+              <Button onClick={this.prev}>
+                Previous
             </Button>
-)}
+            )}
           {
             (current < steps.length - 1 || current === steps.length - 1)
             &&
