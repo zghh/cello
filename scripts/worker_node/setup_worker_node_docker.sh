@@ -32,7 +32,7 @@ command -v docker-compose >/dev/null 2>&1 || { echo_r >&2 "No docker-compose fou
 
 
 echo_b "Copy required fabric 1.0, 1.1 and 1.2 artifacts"
-ARTIFACTS_DIR=/opt/cello
+ARTIFACTS_DIR=/opt/cello-files
 USER=`whoami`
 USERGROUP=`id -gn`
 echo_b "Checking local artifacts path ${ARTIFACTS_DIR}..."

@@ -61,4 +61,7 @@ module.exports = {
   get getRegisteredUserV1_2() {
     return this.app.getRegisteredUserV1_2;
   },
+  get getRegisteredUserV1_4() {
+    return this.app.getRegisteredUserV1_4;
+  },
 };

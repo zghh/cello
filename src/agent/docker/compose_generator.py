@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+from common import HLF_VERSION, HLF_VERSION_1_2, HLF_VERSION_1_4, NETWORK_TYPE_FABRIC_V1_4
 import yaml
 import sys
 import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from common import HLF_VERSION, HLF_VERSION_1_2
 
 # FIXME: will dynamic generate crypto config to replace static files.
 CERT_FILES = {
@@ -20,18 +20,24 @@ CERT_FILES = {
     "fabric-1.2": [
         "ca_sk",
         "ca_sk"
-    ]
+    ],
+    "fabric-1.4": [
+        "f2eeb2a140c5836f537bc92e0dd378043fc8196841878ad7078a0103eae8538d_sk",
+        "f8161495c2cb25a5ff3b4373b5f4fefcbdb35f37666263d4dfd51b6142dd8609_sk"
+    ],
 }
 
 IMAGE_VERSIONS = {
     "fabric-1.0": HLF_VERSION,
     "fabric-1.2": HLF_VERSION_1_2,
+    "fabric-1.4": HLF_VERSION_1_4
 }
 
 # FIXME: ca name need be unique
 CA_NAME_PREFIX = {
     "fabric-1.0": "ca_peerOrg",
-    "fabric-1.2": "ca-org"
+    "fabric-1.2": "ca-org",
+    "fabric-1.4": "ca-org"
 }
 
 
@@ -45,7 +51,7 @@ class ComposeGenerator(object):
         self._consensus_plugin = config.get("consensus_plugin", "solo")
 
     @staticmethod
-    def _generate_peer_config(peer_num, org_num, image_version):
+    def _generate_peer_config(network_type, peer_num, org_num, image_version):
         msp_volumes = "crypto-config/peerOrganizations/" \
                       "org{org_num}.example.com/peers/" \
                       "peer{peer_num}.org{org_num}.example.com/" \
@@ -56,6 +62,47 @@ class ComposeGenerator(object):
                       "peer{peer_num}.org{org_num}.example.com/" \
                       "tls:/etc/hyperledger/fabric/tls". \
             format(peer_num=peer_num, org_num=org_num)
+        if network_type == NETWORK_TYPE_FABRIC_V1_4:
+            return {
+                "image": "hyperledger/fabric-peer:%s" % image_version,
+                "container_name":
+                    "${COMPOSE_PROJECT_NAME}_peer%s_org%s"
+                    % (peer_num, org_num),
+                "restart": "always",
+                "depends_on": ["orderer.example.com"],
+                "environment": [
+                    "CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE="
+                    "${COMPOSE_PROJECT_NAME}_default",
+                    "FABRIC_LOGGING_SPEC=DEBUG",
+                    "CORE_PEER_GOSSIP_USELEADERELECTION=true",
+                    "CORE_PEER_GOSSIP_ORGLEADER=false",
+                    "CORE_PEER_GOSSIP_SKIPHANDSHAKE=true",
+                    "CORE_PEER_TLS_ENABLED=true",
+                    "CORE_PEER_TLS_CERT_FILE="
+                    "/etc/hyperledger/fabric/tls/server.crt",
+                    "CORE_PEER_TLS_KEY_FILE="
+                    "/etc/hyperledger/fabric/tls/server.key",
+                    "CORE_PEER_TLS_ROOTCERT_FILE="
+                    "/etc/hyperledger/fabric/tls/ca.crt",
+                    "CORE_PEER_ID=peer%s.org%s.example.com" %
+                    (peer_num, org_num),
+                    "CORE_PEER_LOCALMSPID=Org%sMSP" % org_num,
+                    "CORE_PEER_ADDRESS=peer%s.org%s.example.com:7051" %
+                    (peer_num, org_num),
+                    "CORE_PEER_LISTENADDRESS=0.0.0.0:7051",
+                    "CORE_PEER_CHAINCODEADDRESS=peer%s.org%s.example.com:7053" %
+                    (peer_num, org_num),
+                    "CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7053"],
+                "ports": [
+                    "${PEER%s_ORG%s_GRPC_PORT}:7051" %
+                    (peer_num, org_num),
+                    "${PEER%s_ORG%s_EVENT_PORT}:7053" %
+                    (peer_num, org_num)],
+                "volumes": [
+                    "/var/run/docker.sock:/var/run/docker.sock",
+                    "${COMPOSE_PROJECT_PATH}/%s" % msp_volumes,
+                    "${COMPOSE_PROJECT_PATH}/%s" % tls_volumes]
+            }
         return {
             "image": "hyperledger/fabric-peer:%s" % image_version,
             "container_name":
@@ -195,7 +242,7 @@ class ComposeGenerator(object):
                 peer_config_key = "peer%s.org%s.example.com" % \
                                   (peer_num, org_num)
                 peer_config = \
-                    self._generate_peer_config(peer_num, org_num,
+                    self._generate_peer_config(self._network_type, peer_num, org_num,
                                                image_version)
                 services.update({
                     peer_config_key: peer_config

@@ -29,7 +29,7 @@ from common import \
     CLUSTER_NETWORK, CONSENSUS_PLUGINS_FABRIC_V1, \
     CLUSTER_LOG_TYPES, CLUSTER_LOG_LEVEL, \
     SERVICE_PORTS, \
-    NETWORK_TYPE_FABRIC_V1_1, NETWORK_TYPE_FABRIC_V1_2, \
+    NETWORK_TYPE_FABRIC_V1_1, NETWORK_TYPE_FABRIC_V1_2, NETWORK_TYPE_FABRIC_V1_4, \
     NETWORK_TYPE_FABRIC_PRE_V1, NETWORK_TYPE_FABRIC_V1, HLF_VERSION
 from agent.docker.compose_generator import ComposeGenerator
 
@@ -375,12 +375,13 @@ def _compose_set_env(name, worker_api, mapped_ports=SERVICE_PORTS,
     }
     if config['network_type'] == NETWORK_TYPE_FABRIC_V1 or \
        config['network_type'] == NETWORK_TYPE_FABRIC_V1_1 or \
-       config['network_type'] == NETWORK_TYPE_FABRIC_V1_2:
+       config['network_type'] == NETWORK_TYPE_FABRIC_V1_2 or \
+       config['network_type'] == NETWORK_TYPE_FABRIC_V1_4:
         envs.update({
             'COMPOSE_FILE': "fabric-{}-{}.yaml".format(
                 config['consensus_plugin'],
                 config['size']),
-            'COMPOSE_PROJECT_PATH': "/opt/cello/{}".format(
+            'COMPOSE_PROJECT_PATH': "/opt/cello-files/{}".format(
                 config['network_type']),
         })
     elif config['network_type'] == NETWORK_TYPE_FABRIC_PRE_V1:

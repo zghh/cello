@@ -18,6 +18,7 @@ CLUSTER_PORT_START = int(os.getenv("CLUSTER_PORT_START", 7050))
 HLF_VERSION = '1.0.5'
 HLF_VERSION_1_1 = '1.1.0'
 HLF_VERSION_1_2 = '1.2.0'
+HLF_VERSION_1_4 = '1.4.8'
 
 # vSphere requires this
 ARCH = 'x86_64'
@@ -76,8 +77,9 @@ NETWORK_TYPE_FABRIC_PRE_V1 = 'fabric-0.6'  # TODO: deprecate 0.6 support soon
 NETWORK_TYPE_FABRIC_V1 = 'fabric-1.0'
 NETWORK_TYPE_FABRIC_V1_1 = 'fabric-1.1'
 NETWORK_TYPE_FABRIC_V1_2 = 'fabric-1.2'
+NETWORK_TYPE_FABRIC_V1_4 = 'fabric-1.4'
 NETWORK_TYPES = [NETWORK_TYPE_FABRIC_V1, NETWORK_TYPE_FABRIC_V1_1,
-                 NETWORK_TYPE_FABRIC_V1_2]
+                 NETWORK_TYPE_FABRIC_V1_2, NETWORK_TYPE_FABRIC_V1_4]
 # only support fabric v1.x now
 
 CONSENSUS_PLUGIN_NOOPS = 'noops'

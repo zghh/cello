@@ -52,6 +52,7 @@ class DeployService extends Service {
     let peers = ['peer1'];
     switch (chain.type) {
       case 'fabric-1.2':
+      case 'fabric-1.4':
         peers = ['peer0.org1.example.com'];
         break;
       default:
@@ -97,6 +98,7 @@ class DeployService extends Service {
     let peer = 'peer1';
     switch (chain.type) {
       case 'fabric-1.2':
+      case 'fabric-1.4':
         peer = 'peer0.org1.example.com';
         break;
       default:

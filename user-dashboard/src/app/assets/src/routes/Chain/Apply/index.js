@@ -73,7 +73,7 @@ class ApplyChain extends PureComponent {
       },
     };
 
-    const networkTypes = ['fabric-1.0', 'fabric-1.2'];
+    const networkTypes = ['fabric-1.0', 'fabric-1.2', 'fabric-1.4'];
     const networkTypeOptions = networkTypes.map(networkType => (
       <Option value={networkType}>{networkType}</Option>
     ));

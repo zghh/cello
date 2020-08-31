@@ -63,7 +63,7 @@ class ChainService extends Service {
   async cleanStore(chainId) {
     const { config, ctx } = this;
     const chainRootDir = `${config.dataDir}/${ctx.user.id}/chains/${chainId}`;
-    rimraf(chainRootDir, function() { ctx.logger.info(`delete directory ${chainRootDir}`); });
+    rimraf(chainRootDir, function () { ctx.logger.info(`delete directory ${chainRootDir}`); });
   }
   async release() {
     const { ctx, config } = this;
@@ -239,14 +239,126 @@ class ChainService extends Service {
         httpOptions: {
           verify: false,
         },
-        registrar: [
-          {
-            enrollId: 'admin',
-            enrollSecret: 'adminpw',
-          },
-        ],
+        registrar: [{
+          enrollId: 'admin',
+          enrollSecret: 'adminpw',
+        },],
         tlsCACerts: {
           path: `/var/www/app/lib/fabric/fixtures/channel/v1.2/crypto-config/peerOrganizations/org${index + 1}.example.com/ca/ca.org${index + 1}.example.com-cert.pem`,
+        },
+        url: `https://${caConfig.address}`,
+      };
+      network[`org${index + 1}`] = {
+        'x-type': 'hlfv1',
+        name: `${chain.name}-org${index + 1}`,
+        description: `org${index + 1}`,
+        version: '1.0',
+        client: {
+          organization: `org${index + 1}`,
+          credentialStore: {
+            path: keyValueStorePath,
+            cryptoStore: {
+              path: `${keyValueStorePath}/tmp`,
+            },
+            wallet: 'wallet',
+          },
+        },
+      };
+    }
+    channels.peers = channelsPeers;
+    const channelsConfig = {};
+    channelsConfig[`${config.default.channelName}`] = channels;
+    network = Object.assign(network, {
+      config: {
+        version: '1.0',
+        'x-type': 'hlfv1',
+        name: `${chain.name}`,
+        description: `${chain.name}`,
+        orderers,
+        certificateAuthorities,
+        organizations,
+        peers,
+        channels: channelsConfig,
+      },
+    });
+    return network;
+  }
+  async generateNetworkFabricV1_4(chainId) {
+    const { ctx, config } = this;
+    const chain = await ctx.model.Chain.findOne({ _id: chainId });
+    const networkConfig = await ctx.model.NetworkConfig.findOne({ chain });
+    const orgConfigs = await ctx.model.OrgConfig.find({ networkConfig }).sort('sequence');
+    const orgConfigCount = await ctx.model.OrgConfig.count({ networkConfig });
+    const ordererConfig = await ctx.model.OrdererConfig.findOne({ networkConfig });
+    const chainRootDir = `${config.dataDir}/${ctx.user.id}/chains/${chain._id.toString()}`;
+    const keyValueStorePath = `${chainRootDir}/client-kvs`;
+    const orderers = {};
+    const certificateAuthorities = {};
+    const channels = {
+      orderers: [
+        'orderer.example.com',
+      ],
+    };
+    const peers = {};
+    const organizations = {};
+    orderers[ordererConfig.serverHostName] = {
+      grpcOptions: {
+        'ssl-target-name-override': ordererConfig.serverHostName,
+      },
+      tlsCACerts: {
+        path: '/var/www/app/lib/fabric/fixtures/channel/v1.4/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt',
+      },
+      url: `grpcs://${ordererConfig.url}`,
+    };
+    const channelsPeers = {};
+    let network = {};
+    for (let index = 0; index < orgConfigCount; index++) {
+      const orgConfig = orgConfigs[index];
+      const caConfig = await ctx.model.CaConfig.findOne({ networkConfig, sequence: orgConfig.sequence });
+      const peerConfigs = await ctx.model.PeerConfig.find({ networkConfig, orgConfig }).sort('sequence');
+      const peerConfigCount = await ctx.model.PeerConfig.count({ networkConfig, orgConfig });
+      const peerNames = [];
+      for (let peerIndex = 0; peerIndex < peerConfigCount; peerIndex++) {
+        peerNames.push(`peer${peerIndex}.org${index + 1}.example.com`);
+        peers[`peer${peerIndex}.org${index + 1}.example.com`] = {
+          eventUrl: `grpcs://${peerConfigs[peerIndex].event}`,
+          grpcOptions: {
+            'ssl-target-name-override': `peer${peerIndex}.org${index + 1}.example.com`,
+          },
+          tlsCACerts: {
+            path: `/var/www/app/lib/fabric/fixtures/channel/v1.4/crypto-config/peerOrganizations/org${index + 1}.example.com/peers/peer${peerIndex}.org${index + 1}.example.com/tls/ca.crt`,
+          },
+          url: `grpcs://${peerConfigs[peerIndex].grpc}`,
+        };
+        channelsPeers[`peer${peerIndex}.org${index + 1}.example.com`] = {
+          chaincodeQuery: true,
+          endorsingPeer: peerIndex === 0,
+          eventSource: peerIndex === 0,
+          ledgerQuery: true,
+        };
+      }
+      organizations[`org${index + 1}`] = {
+        adminPrivateKey: {
+          path: `/var/www/app/lib/fabric/fixtures/channel/v1.4/crypto-config/peerOrganizations/org${index + 1}.example.com/users/Admin@org${index + 1}.example.com/msp/keystore/admin_sk`,
+        },
+        certificateAuthorities: [`ca-org${index + 1}`],
+        mspid: `Org${index + 1}MSP`,
+        peers: peerNames,
+        signedCert: {
+          path: `/var/www/app/lib/fabric/fixtures/channel/v1.4/crypto-config/peerOrganizations/org${index + 1}.example.com/users/Admin@org${index + 1}.example.com/msp/signcerts/Admin@org${index + 1}.example.com-cert.pem`,
+        },
+      };
+      certificateAuthorities[`ca-org${index + 1}`] = {
+        caName: `ca-org${index + 1}`,
+        httpOptions: {
+          verify: false,
+        },
+        registrar: [{
+          enrollId: 'admin',
+          enrollSecret: 'adminpw',
+        },],
+        tlsCACerts: {
+          path: `/var/www/app/lib/fabric/fixtures/channel/v1.4/crypto-config/peerOrganizations/org${index + 1}.example.com/ca/ca.org${index + 1}.example.com-cert.pem`,
         },
         url: `https://${caConfig.address}`,
       };
@@ -292,6 +404,8 @@ class ChainService extends Service {
         return await this.generateNetworkFabricV1_0(chainId);
       case 'fabric-1.2':
         return await this.generateNetworkFabricV1_2(chainId);
+      case 'fabric-1.4':
+        return await this.generateNetworkFabricV1_4(chainId);
     }
   }
   async initialFabric(chain) {
@@ -311,15 +425,19 @@ class ChainService extends Service {
     if (chain.type === 'fabric-1.2') {
       await ctx.getRegisteredUserV1_2(network, ctx.user.username, 'org1', true);
     }
+    if (chain.type === 'fabric-1.4') {
+      await ctx.getRegisteredUserV1_4(network, ctx.user.username, 'org1', true);
+    }
     let peers = ['peer1', 'peer2'];
     switch (chain.type) {
       case 'fabric-1.2':
+      case 'fabric-1.4':
         peers = ['peer0.org1.example.com', 'peer1.org1.example.com'];
         break;
       default:
         break;
     }
-    await ctx.createChannel(network, keyValueStorePath, config.default.channelName, channelConfigPath, 'org1', chain.type);
+    await ctx.createChannel(network, keyValueStorePath, config.default.channelName, channelConfigPath, 'org1', chain.type, ctx.user.username);
     await ctx.sleep(1000);
     await ctx.joinChannel(network, keyValueStorePath, config.default.channelName, peers, 'org1', chain.type, ctx.user.username);
   }
@@ -371,6 +489,7 @@ class ChainService extends Service {
     let peer = 'peer1';
     switch (chainType) {
       case 'fabric-1.2':
+      case 'fabric-1.4':
         peer = 'peer0.org1.example.com';
         break;
       default:
@@ -387,6 +506,7 @@ class ChainService extends Service {
     let peer = 'peer1';
     switch (chainType) {
       case 'fabric-1.2':
+      case 'fabric-1.4':
         peer = 'peer0.org1.example.com';
         break;
       default:
@@ -403,6 +523,7 @@ class ChainService extends Service {
     let peer = 'peer1';
     switch (chainType) {
       case 'fabric-1.2':
+      case 'fabric-1.4':
         peer = 'peer0.org1.example.com';
         break;
       default:
@@ -420,6 +541,7 @@ class ChainService extends Service {
     let peer = 'peer1';
     switch (chain.type) {
       case 'fabric-1.2':
+      case 'fabric-1.4':
         peer = 'peer0.org1.example.com';
         break;
       default:
@@ -456,6 +578,7 @@ class ChainService extends Service {
     let peer = 'peer1';
     switch (chainType) {
       case 'fabric-1.2':
+      case 'fabric-1.4':
         peer = 'peer0.org1.example.com';
         break;
       default:
@@ -472,6 +595,7 @@ class ChainService extends Service {
     let peer = 'peer1';
     switch (chainType) {
       case 'fabric-1.2':
+      case 'fabric-1.4':
         peer = 'peer0.org1.example.com';
         break;
       default:

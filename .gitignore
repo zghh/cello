@@ -199,3 +199,5 @@ jspm_packages
 src/agent/ansible/run/*
 src/agent/ansible/vars/*
 src/agent/ansible/*.retry
+
+.vscode

@@ -115,7 +115,7 @@ class SmartContractService extends Service {
     if (smartContractCodePath !== smartContractCode.path) {
       fs.ensureDirSync(smartContractCodePath);
       await shell.cp('-R', `${smartContractCode.path}/*`, smartContractCodePath);
-      rimraf(smartContractCode.path, function() {
+      rimraf(smartContractCode.path, function () {
         ctx.logger.debug(`delete smart contract path ${smartContractCode.path}`);
       });
     }
@@ -174,6 +174,7 @@ class SmartContractService extends Service {
     let peers = ['peer1', 'peer2'];
     switch (chain.type) {
       case 'fabric-1.2':
+      case 'fabric-1.4':
         peers = ['peer0.org1.example.com', 'peer1.org1.example.com'];
         break;
       default:

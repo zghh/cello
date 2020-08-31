@@ -30,13 +30,6 @@ PROJECT_VERSION_1_0=1.0.5
 IMG_TAG_1_0=1.0.5
 HLF_VERSION_1_0=1.0.5
 
-ARCH_1_1=$ARCH_1_0
-BASEIMAGE_RELEASE_1_1=0.4.6
-BASE_VERSION_1_1=1.1.0
-PROJECT_VERSION_1_1=1.1.0
-IMG_TAG_1_1=1.1.0
-HLF_VERSION_1_1=1.1.0
-
 ARCH_1_2=$ARCH_1_0
 BASEIMAGE_RELEASE_1_2=0.4.10
 BASE_VERSION_1_2=1.2.0
@@ -44,8 +37,19 @@ PROJECT_VERSION_1_2=1.2.0
 IMG_TAG_1_2=1.2.0
 HLF_VERSION_1_2=1.2.0  # TODO: should be the same with src/common/utils.py
 
+ARCH_1_4=$ARCH_1_0
+BASEIMAGE_RELEASE_1_4=0.4.21
+BASE_VERSION_1_4=1.4.8
+PROJECT_VERSION_1_4=1.4.8
+IMG_TAG_1_4=1.4.8
+HLF_VERSION_1_4=1.4.8  # TODO: should be the same with src/common/utils.py
+
 if [ $ARCH_1_2 = "x86_64" ];then
 ARCH_1_2="amd64"
+fi
+
+if [ $ARCH_1_4 = "x86_64" ];then
+ARCH_1_4="amd64"
 fi
 
 function downloadImages() {
@@ -94,8 +98,8 @@ function downloadImages() {
 }
 
 downloadImages $ARCH_1_0 $IMG_TAG_1_0 $BASEIMAGE_RELEASE_1_0 $HLF_VERSION_1_0 $IMG_TAG_1_0            #kafka and zookeeper have the same IMG_TAG as peer in 1.0
-downloadImages $ARCH_1_1 $IMG_TAG_1_1 $BASEIMAGE_RELEASE_1_1 $HLF_VERSION_1_1 $BASEIMAGE_RELEASE_1_1  #kafka and zookeeper have the same IMG_TAG as baseimage in 1.1
 downloadImages $ARCH_1_2 $IMG_TAG_1_2 $BASEIMAGE_RELEASE_1_2 $HLF_VERSION_1_2 $BASEIMAGE_RELEASE_1_2  #kafka and zookeeper have the same IMG_TAG as baseimage in 1.2
+downloadImages $ARCH_1_4 $IMG_TAG_1_4 $BASEIMAGE_RELEASE_1_4 $HLF_VERSION_1_4 $BASEIMAGE_RELEASE_1_4  #kafka and zookeeper have the same IMG_TAG as baseimage in 1.4
 
 # Used by explorer
 docker pull mysql:5.7
