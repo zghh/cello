@@ -859,7 +859,7 @@ module.exports = app => {
         chaincodeId: chainCodeName,
         chaincodeVersion: smartContractCode.version,
       };
-      const results = await client.installChaincode(request);
+      const results = await client.installChaincode(request, 120000);
       // the returned object has both the endorsement results
       // and the actual proposal, the proposal will be needed
       // later when we send a transaction to the orederer
