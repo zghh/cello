@@ -440,6 +440,10 @@ class ChainService extends Service {
     await ctx.createChannel(network, keyValueStorePath, config.default.channelName, channelConfigPath, 'org1', chain.type, ctx.user.username);
     await ctx.sleep(1000);
     await ctx.joinChannel(network, keyValueStorePath, config.default.channelName, peers, 'org1', chain.type, ctx.user.username);
+    if (chain.type === 'fabric-1.4') {
+      peers = ['peer0.org2.example.com', 'peer1.org2.example.com'];
+      await ctx.joinChannel(network, keyValueStorePath, config.default.channelName, peers, 'org2', chain.type, ctx.user.username);
+    }
   }
   async apply() {
     const { ctx, config } = this;

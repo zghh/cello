@@ -73,7 +73,7 @@ class ComposeGenerator(object):
                 "environment": [
                     "CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE="
                     "${COMPOSE_PROJECT_NAME}_default",
-                    "FABRIC_LOGGING_SPEC=DEBUG",
+                    "FABRIC_LOGGING_SPEC=INFO",
                     "CORE_PEER_GOSSIP_USELEADERELECTION=true",
                     "CORE_PEER_GOSSIP_ORGLEADER=false",
                     "CORE_PEER_GOSSIP_SKIPHANDSHAKE=true",
@@ -92,7 +92,12 @@ class ComposeGenerator(object):
                     "CORE_PEER_LISTENADDRESS=0.0.0.0:7051",
                     "CORE_PEER_CHAINCODEADDRESS=peer%s.org%s.example.com:7053" %
                     (peer_num, org_num),
-                    "CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7053"],
+                    "CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7053",
+                    "CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer%s.org%s.example.com:7051" %
+                    (peer_num, org_num),
+                    "CORE_PEER_GOSSIP_BOOTSTRAP=peer%s.org%s.example.com:7051" %
+                    (peer_num ^ 1, org_num),
+                ],
                 "ports": [
                     "${PEER%s_ORG%s_GRPC_PORT}:7051" %
                     (peer_num, org_num),
@@ -113,7 +118,7 @@ class ComposeGenerator(object):
             "environment": [
                 "CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE="
                 "${COMPOSE_PROJECT_NAME}_default",
-                "CORE_LOGGING_LEVEL=DEBUG",
+                "CORE_LOGGING_LEVEL=INFO",
                 "CORE_PEER_GOSSIP_USELEADERELECTION=true",
                 "CORE_PEER_GOSSIP_ORGLEADER=false",
                 "CORE_PEER_GOSSIP_SKIPHANDSHAKE=true",
@@ -152,12 +157,55 @@ class ComposeGenerator(object):
                     "peer%s.org%s.example.com" %
                     (peer_num, org_num, peer_num, org_num)
                 )
+        if self._network_type == NETWORK_TYPE_FABRIC_V1_4:
+            return {
+                "image": "hyperledger/fabric-orderer:%s" % image_version,
+                "container_name": "${COMPOSE_PROJECT_NAME}_orderer",
+                "restart": "always",
+                "environment": [
+                    "FABRIC_LOGGING_SPEC=INFO",
+                    "ORDERER_GENERAL_LISTENADDRESS=0.0.0.0",
+                    "ORDERER_GENERAL_GENESISMETHOD=file",
+                    "ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/"
+                    "orderer.genesis.block",
+                    "ORDERER_GENERAL_LOCALMSPID=OrdererMSP",
+                    "ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp",
+                    "ORDERER_GENERAL_TLS_ENABLED=true",
+                    "ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/"
+                    "tls/server.key",
+                    "ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/"
+                    "tls/server.crt",
+                    "ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/"
+                    "tls/ca.crt]",
+                    "ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/"
+                    "tls/server.crt",
+                    "ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/"
+                    "tls/server.key",
+                    "ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]"
+                ],
+                "volumes": [
+                    "${COMPOSE_PROJECT_PATH}/solo/channel-artifacts/"
+                    "orderer.genesis.block:/var/hyperledger/orderer/"
+                    "orderer.genesis.block",
+                    "${COMPOSE_PROJECT_PATH}/crypto-config/ordererOrganizations/"
+                    "example.com/orderers/orderer.example.com/msp:/"
+                    "var/hyperledger/orderer/msp",
+                    "${COMPOSE_PROJECT_PATH}/crypto-config/ordererOrganizations/"
+                    "example.com/orderers/orderer.example.com/tls/"
+                    ":/var/hyperledger/orderer/tls"
+                ],
+                "external_links": external_links,
+                "command": "orderer",
+                "ports": [
+                    "${ORDERER_PORT}:7050"
+                ]
+            }
         return {
             "image": "hyperledger/fabric-orderer:%s" % image_version,
             "container_name": "${COMPOSE_PROJECT_NAME}_orderer",
             "restart": "always",
             "environment": [
-                "ORDERER_GENERAL_LOGLEVEL=DEBUG",
+                "ORDERER_GENERAL_LOGLEVEL=INFO",
                 "ORDERER_GENERAL_LISTENADDRESS=0.0.0.0",
                 "ORDERER_GENERAL_GENESISMETHOD=file",
                 "ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/"
